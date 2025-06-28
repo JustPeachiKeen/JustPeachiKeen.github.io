@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Adopt Me Pet Tracker</title>
+<style>
+  :root {
+    --pink: #ff69b4;
+    --pink-light: #ffade7;
+    --pink-lighter: #ffe6f3;
+    --blue: #6ca0ff;
+    --blue-light: #a9caff;
+    --background: #fff0f6;
+    --text-dark: #333;
+    --card-bg: #fff8f0;
+    --card-shadow: rgba(255, 105, 180, 0.2);
+  }
+
+  body {
+    background: var(--background);
+    font-family: 'Poppins', sans-serif;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    color: var(--text-dark);
+  }
+
+  nav a {
+    text-decoration: none;
+    margin-right: 10px;
+    color: var(--pink);
+    font-weight: normal;
+    cursor: pointer;
+  }
+  nav a.active {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+  h1, h2 {
+    color: var(--pink);
+  }
+
+  /* Buttons */
+  button {
+    border-radius: 20px;
+    padding: 10px 20px;
+    background: var(--pink);
+    box-shadow: 0 4px 8px var(--card-shadow);
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  button:hover {
+    background: #ff1c5c;
+    box-shadow: 0 6px 12px rgba(255, 28, 92, 0.6);
+  }
+  #reset-button {
+    background:#ff6b81;
+    box-shadow: 0 4px 8px rgba(255, 107, 129, 0.4);
+  }
+  #reset-button:hover {
+    background:#ff3a5f;
+    box-shadow: 0 6px 12px rgba(255, 58, 95, 0.6);
+  }
+
+  /* Forms */
+  form {
+    background: var(--card-bg);
+    border: 2px solid var(--pink-light);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    padding: 8px;
+    margin: 6px 0;
+    width: calc(100% - 20px);
+    border-radius: 8px;
+    border: 1.5px solid var(--pink-light);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus {
+    border-color: var(--pink);
+    outline: none;
+  }
+
+  label {
+    cursor: pointer;
+    margin-right: 10px;
+    font-weight: 500;
+  }
+
+  /* Nav */
+  section {
+    display: none;
+  }
+  section.active {
+    display: block;
+  }
+
+  /* Pet cards container */
+  #pet-body {
+    /* Remove flex styles, use default table layout */
+    display: table-row-group;
+    gap: 0;
+    padding: 0;
+  }
+
+  #pet-body tr {
+    background: var(--card-bg);
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: unset;
+    transition: none;
+    display: table-row;
+  }
+
+  #pet-body tr:hover {
+    background: var(--pink-lighter);
+    box-shadow: none;
+    transform: none;
+  }
+
+  #pet-body td, #pet-body th {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    vertical-align: middle;
+    display: table-cell;
+  }
+
+  #pet-body td:first-child {
+    text-align: left;
+  }
+  #pet-body td:first-child img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: contain;
+    margin-right: 8px;
+    vertical-align: middle;
+    display: inline-block;
+  }
+
+  #pet-body tr.neon {
+    border-left: 4px solid #7eed9e;
+  }
+
+  #pet-body tr.mega {
+    border-left: 4px solid #67a0ff;
+  }
+
+  /* Filter input */
+  #filter-container {
+    margin-bottom: 20px;
+  }
+  #filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid var(--pink-light);
+    transition: border-color 0.3s ease;
+  }
+  #filter-input:focus {
+    border-color: var(--pink);
+    outline: none;
+  }
+
+  /* Value Settings table */
+  #value-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #value-table th,
+  #value-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    vertical-align: top;
+    font-size: 0.9rem;
+  }
+  #value-table th {
+    background: var(--pink-light);
+    color: var(--pink);
+  }
+  #value-table label {
+    display: block;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+  #value-table input[type="number"] {
+    width: 70px;
+    border-radius: 6px;
+    border: 1px solid var(--pink-light);
+    padding: 4px;
+    font-size: 0.9rem;
+  }
+  #value-table button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  /* Responsive improvements */
+  @media (max-width: 600px) {
+    #pet-body {
+      display: table-row-group;
+    }
+    #pet-body tr td {
+      display: table-cell;
+      flex-direction: unset;
+      align-items: unset;
+    }
+    #pet-body tr td:last-child {
+      justify-content: unset;
+      margin-top: unset;
+      gap: unset;
+    }
+  }
+
+  #pet-table th {
+    background: #fff;
+    color: var(--pink);
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: 2px solid var(--pink-light);
+    padding: 14px 10px;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  #pet-table th[data-sort] {
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #pet-table th[data-sort]:hover {
+    background: var(--pink-lighter);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" id="nav-pets" class="active">Pets</a> | 
+  <a href="#" id="nav-values">Value Settings</a>
+</nav>
+
+<section id="pets-section" class="active">
+  <h1>Adopt Me Pet Tracker</h1>
+
+  <form id="pet-form">
+    <h2 style="margin-top:0;">Add or Update Pet</h2>
+    <input type="text" id="pet-name" placeholder="Pet name" required autocomplete="off"/>
+    <input type="number" id="pet-count" placeholder="Count" min="1" required />
+    <br />
+    <label><input type="checkbox" id="pet-ride" /> Ride</label>
+    <label><input type="checkbox" id="pet-fly" /> Fly</label>
+    <br />
+    <input type="text" id="pet-image" placeholder="Image URL or /images/filename.png" required autocomplete="off"/>
+    <br />
+    <button type="submit">Add / Update Pet</button>
+  </form>
+
+  <button id="reset-button">Reset All Pets</button>
+
+  <div id="backup-import-buttons" style="margin-top:12px;">
+    <button id="export-data">Export Data</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" />
+    <button id="import-data">Import Data</button>
+  </div>
+
+  <div id="filter-container">
+    <input type="text" id="filter-input" placeholder="Search pets by name or filter by Ride/Fly/Neon/Mega" />
+  </div>
+
+  <table id="pet-table" style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th data-sort="pet">Pet</th>
+        <th data-sort="count">Owned</th>
+        <th data-sort="neon">Neon?</th>
+        <th data-sort="mega">Mega?</th>
+        <th data-sort="neonValue">Neon Value</th>
+        <th data-sort="megaValue">Mega Value</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="pet-body"></tbody>
+  </table>
+</section>
+
+<section id="value-settings">
+  <h1>Value Settings</h1>
+
+  <form id="add-value-form">
+    <input type="text" id="value-pet-name" placeholder="Pet name" required autocomplete="off"/>
+    <button type="submit">Add Pet Value Entry</button>
+  </form>
+
+  <div id="value-search-container" style="margin-bottom: 12px;">
+    <input type="text" id="value-search-input" placeholder="Search pets by name..." style="width: 100%; padding: 10px 14px; font-size: 1rem; border-radius: 12px; border: 2px solid var(--pink-light);" />
+  </div>
+
+  <table id="value-table">
+    <thead>
+      <tr>
+        <th>Pet</th>
+        <th>Neon Values</th>
+        <th>Mega Values</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div id="value-pagination" style="margin-top: 10px; text-align: center;"></div>
+  <p><small>Values default to 0 if empty. Edit numbers directly.</small></p>
+</section>
+
+<script>
+  // Navigation tab switching
+  const navPets = document.getElementById("nav-pets");
+  const navValues = document.getElementById("nav-values");
+  const petsSection = document.getElementById("pets-section");
+  const valuesSection = document.getElementById("value-settings");
+
+  navPets.addEventListener("click", e => {
+    e.preventDefault();
+    navPets.classList.add("active");
+    navValues.classList.remove("active");
+    petsSection.classList.add("active");
+    valuesSection.classList.remove("active");
+  });
+
+  navValues.addEventListener("click", e => {
+    e.preventDefault();
+    navValues.classList.add("active");
+    navPets.classList.remove("active");
+    valuesSection.classList.add("active");
+    petsSection.classList.remove("active");
+  });
+
+  // Data
+  let pets = JSON.parse(localStorage.getItem("adoptMePets")) || [];
+  let valueTable = JSON.parse(localStorage.getItem("adoptMeValueTable")) || {};
+
+  let editingIndex = null;
+
+  // UTIL: Ensure a pet value entry has the nested structure
+  function ensureNestedValueStructure(key) {
+    if (!valueTable[key]) {
+      valueTable[key] = {
+        petNameOriginal: key,
+        neon: {normal:0, ride:0, fly:0, rideFly:0},
+        mega: {normal:0, ride:0, fly:0, rideFly:0}
+      };
+    } else {
+      if (!valueTable[key].neon) valueTable[key].neon = {normal:0, ride:0, fly:0, rideFly:0};
+      if (!valueTable[key].mega) valueTable[key].mega = {normal:0, ride:0, fly:0, rideFly:0};
+      ["normal","ride","fly","rideFly"].forEach(k=>{
+        if (valueTable[key].neon[k] === undefined) valueTable[key].neon[k] = 0;
+        if (valueTable[key].mega[k] === undefined) valueTable[key].mega[k] = 0;
+      });
+    }
+  }
+
+  // --- Sorting functionality ---
+  let petSort = { key: null, dir: 1 };
+
+  // Helper to get value for sorting
+  function getPetSortValue(pet, key) {
+    let potionKey = "normal";
+    if(pet.ride && pet.fly) potionKey = "rideFly";
+    else if(pet.ride) potionKey = "ride";
+    else if(pet.fly) potionKey = "fly";
+    const values = valueTable[pet.name.toLowerCase()];
+    switch(key) {
+      case "pet": return pet.name.toLowerCase();
+      case "count": return pet.count;
+      case "neon": return pet.count >= 4 ? 1 : 0;
+      case "mega": return pet.count >= 16 ? 1 : 0;
+      case "neonValue": return values && values.neon ? (values.neon[potionKey] ?? 0) : 0;
+      case "megaValue": return values && values.mega ? (values.mega[potionKey] ?? 0) : 0;
+      default: return 0;
+    }
+  }
+
+  // Add click listeners to headers
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('#pet-table th[data-sort]').forEach(th => {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', function() {
+        const key = th.getAttribute('data-sort');
+        if (petSort.key === key) {
+          petSort.dir *= -1;
+        } else {
+          petSort.key = key;
+          petSort.dir = 1;
+        }
+        renderPets();
+        updateSortIndicators();
+      });
+    });
+    updateSortIndicators();
+  });
+
+  function updateSortIndicators() {
+    document.querySelectorAll('#pet-table th[data-sort]').forEach(th => {
+      th.textContent = th.textContent.replace(/\s*[▲▼]$/, '');
+      const key = th.getAttribute('data-sort');
+      if (petSort.key === key) {
+        th.textContent += petSort.dir === 1 ? ' ▲' : ' ▼';
+      }
+    });
+  }
+
+  // Render Pets as cards
+  function renderPets() {
+    const tbody = document.getElementById("pet-body");
+    tbody.innerHTML = "";
+
+    const filterText = document.getElementById("filter-input").value.toLowerCase();
+
+    let petsToShow = pets.filter((pet) => {
+      const neon = pet.count >= 4;
+      const mega = pet.count >= 16;
+      let filterPass = pet.name.toLowerCase().includes(filterText) ||
+        (filterText === "ride" && pet.ride) ||
+        (filterText === "fly" && pet.fly) ||
+        (filterText === "ride+fly" && pet.ride && pet.fly) ||
+        (filterText === "neon" && neon) ||
+        (filterText === "mega" && mega);
+      return filterPass;
+    });
+
+    // Sort if needed
+    if (petSort.key) {
+      petsToShow.sort((a, b) => {
+        let va = getPetSortValue(a, petSort.key);
+        let vb = getPetSortValue(b, petSort.key);
+        if (typeof va === 'string' && typeof vb === 'string') {
+          return va.localeCompare(vb) * petSort.dir;
+        }
+        return (va - vb) * petSort.dir;
+      });
+    }
+
+    petsToShow.forEach((pet, index) => {
+      const neon = pet.count >= 4;
+      const mega = pet.count >= 16;
+      let potionKey = "normal";
+      if(pet.ride && pet.fly) potionKey = "rideFly";
+      else if(pet.ride) potionKey = "ride";
+      else if(pet.fly) potionKey = "fly";
+      const values = valueTable[pet.name.toLowerCase()];
+      let neonValue = "—";
+      let megaValue = "—";
+      if(values && values.neon && values.mega) {
+        neonValue = values.neon[potionKey] ?? 0;
+        megaValue = values.mega[potionKey] ?? 0;
+      }
+      let potionText = "";
+      if (pet.ride && pet.fly) potionText = " (Ride+Fly)";
+      else if (pet.ride) potionText = " (Ride)";
+      else if (pet.fly) potionText = " (Fly)";
+      const row = document.createElement("tr");
+      if (mega) row.classList.add("mega");
+      else if (neon) row.classList.add("neon");
+      row.innerHTML = `
+        <td><img src="${pet.image}" alt="${pet.name}" /> ${pet.name}${potionText}</td>
+        <td>${pet.count}</td>
+        <td>${neon ? "✅" : "❌"}</td>
+        <td>${mega ? "✅" : "❌"}</td>
+        <td>${neonValue}</td>
+        <td>${megaValue}</td>
+        <td>
+          <button onclick="editPet(${pets.indexOf(pet)})">Edit</button>
+          <button onclick="deletePet(${pets.indexOf(pet)})">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+    localStorage.setItem("adoptMePets", JSON.stringify(pets));
+  }
+
+  // Edit and delete pets
+  function editPet(index) {
+    const pet = pets[index];
+    document.getElementById("pet-name").value = pet.name;
+    document.getElementById("pet-count").value = pet.count;
+    document.getElementById("pet-ride").checked = pet.ride;
+    document.getElementById("pet-fly").checked = pet.fly;
+    document.getElementById("pet-image").value = pet.image;
+    editingIndex = index;
+    navPets.click();
+  }
+
+  function deletePet(index) {
+    if (confirm("Are you sure you want to delete this pet?")) {
+      pets.splice(index, 1);
+      renderPets();
+    }
+  }
+
+  // Add/update pet
+  document.getElementById("pet-form").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const name = document.getElementById("pet-name").value.trim();
+    const count = parseInt(document.getElementById("pet-count").value);
+    const ride = document.getElementById("pet-ride").checked;
+    const fly = document.getElementById("pet-fly").checked;
+    const image = document.getElementById("pet-image").value.trim();
+
+    if(!name || !image || !count || count < 1) return alert("Please fill out all fields correctly.");
+
+    const newPet = { name, count, ride, fly, image };
+
+    if (editingIndex !== null) {
+      pets[editingIndex] = newPet;
+      editingIndex = null;
+    } else {
+      // Merge if same pet + potion combo exists
+      const existing = pets.find(
+        pet =>
+          pet.name.toLowerCase() === name.toLowerCase() &&
+          pet.ride === ride &&
+          pet.fly === fly
+      );
+
+      if (existing) {
+        existing.count += count;
+      } else {
+        pets.push(newPet);
+      }
+    }
+
+    e.target.reset();
+    renderPets();
+  });
+
+  // Reset pets
+  document.getElementById("reset-button").addEventListener("click", () => {
+    if (confirm("This will delete all your pets. Are you sure?")) {
+      localStorage.removeItem("adoptMePets");
+      pets = [];
+      renderPets();
+    }
+  });
+
+  // Filter input event
+  document.getElementById("filter-input").addEventListener("input", () => {
+    renderPets();
+  });
+
+  // --- Value Settings ---
+
+  const valueTableBody = document.querySelector("#value-table tbody");
+  const valueSearchInput = document.getElementById("value-search-input");
+  const valuePagination = document.getElementById("value-pagination");
+  let valueCurrentPage = 1;
+  const valuePageSize = 10;
+
+  function renderValueTable() {
+    valueTableBody.innerHTML = "";
+    let search = valueSearchInput.value.trim().toLowerCase();
+    let sortedKeys = Object.keys(valueTable).sort((a,b) => a.localeCompare(b));
+    if (search) {
+      sortedKeys = sortedKeys.filter(key => key.includes(search));
+    }
+    const total = sortedKeys.length;
+    const totalPages = Math.max(1, Math.ceil(total / valuePageSize));
+    if (valueCurrentPage > totalPages) valueCurrentPage = totalPages;
+    const start = (valueCurrentPage - 1) * valuePageSize;
+    const end = start + valuePageSize;
+    const pageKeys = sortedKeys.slice(start, end);
+
+    pageKeys.forEach(key => {
+      ensureNestedValueStructure(key);
+      const v = valueTable[key];
+      const neon = v.neon;
+      const mega = v.mega;
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${v.petNameOriginal}</td>
+        <td>
+          <label>Normal <input type="number" step="0.01" min="0" data-pet="${key}" data-type="neon" data-key="normal" value="${neon.normal}" /></label>
+          <label>Ride <input type="number" step="0.01" min="0" data-pet="${key}" data-type="neon" data-key="ride" value="${neon.ride}" /></label>
+          <label>Fly <input type="number" step="0.01" min="0" data-pet="${key}" data-type="neon" data-key="fly" value="${neon.fly}" /></label>
+          <label>RideFly <input type="number" step="0.01" min="0" data-pet="${key}" data-type="neon" data-key="rideFly" value="${neon.rideFly}" /></label>
+        </td>
+        <td>
+          <label>Normal <input type="number" step="0.01" min="0" data-pet="${key}" data-type="mega" data-key="normal" value="${mega.normal}" /></label>
+          <label>Ride <input type="number" step="0.01" min="0" data-pet="${key}" data-type="mega" data-key="ride" value="${mega.ride}" /></label>
+          <label>Fly <input type="number" step="0.01" min="0" data-pet="${key}" data-type="mega" data-key="fly" value="${mega.fly}" /></label>
+          <label>RideFly <input type="number" step="0.01" min="0" data-pet="${key}" data-type="mega" data-key="rideFly" value="${mega.rideFly}" /></label>
+        </td>
+        <td><button data-pet="${key}">Delete</button></td>
+      `;
+      valueTableBody.appendChild(row);
+    });
+    // Pagination controls
+    valuePagination.innerHTML = "";
+    if (totalPages > 1) {
+      const prevBtn = document.createElement("button");
+      prevBtn.textContent = "Prev";
+      prevBtn.disabled = valueCurrentPage === 1;
+      prevBtn.style.marginRight = "8px";
+      prevBtn.onclick = () => { valueCurrentPage--; renderValueTable(); };
+      valuePagination.appendChild(prevBtn);
+      valuePagination.appendChild(document.createTextNode(`Page ${valueCurrentPage} of ${totalPages}`));
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "Next";
+      nextBtn.disabled = valueCurrentPage === totalPages;
+      nextBtn.style.marginLeft = "8px";
+      nextBtn.onclick = () => { valueCurrentPage++; renderValueTable(); };
+      valuePagination.appendChild(nextBtn);
+    }
+    localStorage.setItem("adoptMeValueTable", JSON.stringify(valueTable));
+  }
+
+  valueSearchInput.addEventListener("input", function() {
+    valueCurrentPage = 1;
+    renderValueTable();
+  });
+
+  // Add new pet to value table
+  document.getElementById("add-value-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const petName = document.getElementById("value-pet-name").value.trim().toLowerCase();
+    if (!petName) return alert("Please enter a pet name.");
+
+    if(valueTable[petName]) {
+      alert("This pet already exists in value settings.");
+      return;
+    }
+
+    valueTable[petName] = {
+      petNameOriginal: petName,
+      neon: {normal:0, ride:0, fly:0, rideFly:0},
+      mega: {normal:0, ride:0, fly:0, rideFly:0}
+    };
+
+    saveValueTable();
+    renderValueTable();
+    alert(`Added ${petName} to Value Settings. Please edit its values.`);
+    document.getElementById("value-pet-name").value = "";
+  });
+
+  // Save valueTable on input change (delegation)
+  valueTableBody.addEventListener("input", e => {
+    const input = e.target;
+    const pet = input.dataset.pet;
+    const type = input.dataset.type; // neon or mega
+    const key = input.dataset.key; // normal, ride, fly, rideFly
+    let val = parseFloat(input.value);
+
+    if (!pet || !type || !key) return;
+    if (isNaN(val)) val = 0;
+
+    ensureNestedValueStructure(pet);
+
+    valueTable[pet][type][key] = val;
+    saveValueTable();
+    renderPets(); // Update pets table neon/mega values immediately
+  });
+
+  // Delete pet value entry
+  valueTableBody.addEventListener("click", e => {
+    if (e.target.tagName === "BUTTON") {
+      const pet = e.target.dataset.pet;
+      if (confirm(`Delete value entry for "${valueTable[pet].petNameOriginal}"? This will remove all values.`)) {
+        delete valueTable[pet];
+        saveValueTable();
+        renderValueTable();
+        renderPets();
+      }
+    }
+  });
+
+  function saveValueTable() {
+    localStorage.setItem("adoptMeValueTable", JSON.stringify(valueTable));
+  }
+
+  // --- Backup and Import functionality ---
+
+  // Export data as JSON file
+  document.getElementById("export-data").addEventListener("click", () => {
+    const data = {
+      pets,
+      valueTable
+    };
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "adopt_me_pet_data_backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import data from JSON file
+  const importFileInput = document.getElementById("import-file");
+  document.getElementById("import-data").addEventListener("click", () => {
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = event => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        if (importedData.pets && importedData.valueTable) {
+          pets = importedData.pets;
+          valueTable = importedData.valueTable;
+
+          localStorage.setItem("adoptMePets", JSON.stringify(pets));
+          localStorage.setItem("adoptMeValueTable", JSON.stringify(valueTable));
+
+          renderPets();
+          renderValueTable();
+          alert("Data imported successfully!");
+        } else {
+          alert("Invalid data format.");
+        }
+      } catch (err) {
+        alert("Error parsing JSON: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ""; // Reset input
+  });
+
+  // Initial render
+  renderPets();
+  renderValueTable();
+</script>
+
+</body>
+</html>

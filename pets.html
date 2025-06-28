@@ -1,0 +1,311 @@
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Adopt Me Pet Tracker - Pets</title>
+          <style>
+            body {
+              font-family: sans-serif;
+              background: #fffcef;
+              padding: 20px;
+              max-width: 900px;
+              margin: auto;
+            }
+            nav a {
+              text-decoration: none;
+              margin-right: 10px;
+              color: #ff69b4;
+              font-weight: normal;
+            }
+            nav a.active {
+              font-weight: bold;
+            }
+            h1, h2 {
+              color: #ff69b4;
+            }
+            form {
+              background: #fff8f0;
+              border: 2px solid #ffc0cb;
+              padding: 12px;
+              border-radius: 12px;
+              margin-bottom: 20px;
+            }
+            input[type="text"],
+            input[type="number"] {
+              padding: 5px;
+              margin: 5px 0;
+              width: calc(100% - 12px);
+            }
+            button {
+              margin-top: 10px;
+              padding: 8px 16px;
+              background: #ff69b4;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              cursor: pointer;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: center;
+              user-select: none;
+            }
+            th {
+              background-color: #ffc0cb;
+              cursor: pointer;
+              position: relative;
+            }
+            th .arrow {
+              font-size: 0.8em;
+              margin-left: 4px;
+              user-select: none;
+            }
+            td:first-child {
+              text-align: left;
+            }
+            img {
+              vertical-align: middle;
+              width: 40px;
+              height: 40px;
+              margin-right: 8px;
+              border-radius: 6px;
+            }
+            .neon {
+              background-color: #d1ffd1;
+            }
+            .mega {
+              background-color: #c1e1ff;
+            }
+            #reset-button {
+              background:#ff6b81;
+              margin-top: 10px;
+              padding: 8px 16px;
+              color:#fff;
+              border:none;
+              border-radius:6px;
+              cursor:pointer;
+            }
+          </style>
+          </head>
+          <body>
+          <nav>
+            <a href="pets.html" class="active">Pets</a> | 
+            <a href="values.html">Value Settings</a>
+          </nav>
+
+          <h1>Adopt Me Pet Tracker</h1>
+
+          <h2>Add or Update Pet</h2>
+          <form id="pet-form">
+            <input type="text" id="pet-name" placeholder="Pet name" required />
+            <input type="number" id="pet-count" placeholder="Count" min="1" required />
+            <br />
+            <label><input type="checkbox" id="pet-ride" /> Ride</label>
+            <label><input type="checkbox" id="pet-fly" /> Fly</label>
+            <br />
+            <input type="text" id="pet-image" placeholder="Image URL or /images/filename.png" required />
+            <br />
+            <button type="submit">Add / Update Pet</button>
+          </form>
+
+          <button id="reset-button">Reset All Pets</button>
+
+          <table id="pet-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-column="name">Pet <span class="arrow"></span></th>
+                <th class="sortable" data-column="count">Owned <span class="arrow"></span></th>
+                <th class="sortable" data-column="neon">Neon? <span class="arrow"></span></th>
+                <th class="sortable" data-column="mega">Mega? <span class="arrow"></span></th>
+                <th class="sortable" data-column="neonValue">Neon Value <span class="arrow"></span></th>
+                <th class="sortable" data-column="megaValue">Mega Value <span class="arrow"></span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pet-body"></tbody>
+          </table>
+
+          <script>
+            // Load pets and value table from localStorage
+            let pets = JSON.parse(localStorage.getItem("adoptMePets")) || [];
+            let valueTable = JSON.parse(localStorage.getItem("adoptMeValueTable")) || {};
+
+            let editingIndex = null;
+            let currentSort = { column: null, ascending: true };
+
+            function renderPets() {
+              const tbody = document.getElementById("pet-body");
+              tbody.innerHTML = "";
+
+              pets.forEach((pet, index) => {
+                const neon = pet.count >= 4;
+                const mega = pet.count >= 16;
+
+                let potionText = "";
+                if (pet.ride && pet.fly) potionText = " (Ride+Fly)";
+                else if (pet.ride) potionText = " (Ride)";
+                else if (pet.fly) potionText = " (Fly)";
+
+                const values = valueTable[pet.name.toLowerCase()] || {};
+                const neonValue = values.neonValue ?? "—";
+                const megaValue = values.megaValue ?? "—";
+
+                const row = document.createElement("tr");
+                if (mega) row.classList.add("mega");
+                else if (neon) row.classList.add("neon");
+
+                row.innerHTML = `
+                  <td><img src="${pet.image}" alt="${pet.name}">${pet.name}${potionText}</td>
+                  <td>${pet.count}</td>
+                  <td>${neon ? "✅" : "❌"}</td>
+                  <td>${mega ? "✅" : "❌"}</td>
+                  <td>${neonValue}</td>
+                  <td>${megaValue}</td>
+                  <td>
+                    <button onclick="editPet(${index})">Edit</button>
+                    <button onclick="deletePet(${index})">Delete</button>
+                  </td>
+                `;
+                tbody.appendChild(row);
+              });
+
+              localStorage.setItem("adoptMePets", JSON.stringify(pets));
+              updateSortArrows();
+            }
+
+            function editPet(index) {
+              const pet = pets[index];
+              document.getElementById("pet-name").value = pet.name;
+              document.getElementById("pet-count").value = pet.count;
+              document.getElementById("pet-ride").checked = pet.ride;
+              document.getElementById("pet-fly").checked = pet.fly;
+              document.getElementById("pet-image").value = pet.image;
+              editingIndex = index;
+            }
+
+            function deletePet(index) {
+              if (confirm("Are you sure you want to delete this pet?")) {
+                pets.splice(index, 1);
+                renderPets();
+              }
+            }
+
+            document.getElementById("pet-form").addEventListener("submit", e => {
+              e.preventDefault();
+
+              const name = document.getElementById("pet-name").value.trim();
+              const count = parseInt(document.getElementById("pet-count").value);
+              const ride = document.getElementById("pet-ride").checked;
+              const fly = document.getElementById("pet-fly").checked;
+              const image = document.getElementById("pet-image").value.trim();
+
+              const newPet = { name, count, ride, fly, image };
+
+              if (editingIndex !== null) {
+                pets[editingIndex] = newPet;
+                editingIndex = null;
+              } else {
+                const existing = pets.find(
+                  pet =>
+                    pet.name.toLowerCase() === name.toLowerCase() &&
+                    pet.ride === ride &&
+                    pet.fly === fly
+                );
+
+                if (existing) {
+                  existing.count += count;
+                } else {
+                  pets.push(newPet);
+                }
+              }
+
+              e.target.reset();
+              renderPets();
+            });
+
+            document.getElementById("reset-button").addEventListener("click", () => {
+              if (confirm("This will delete all your pets. Are you sure?")) {
+                localStorage.removeItem("adoptMePets");
+                location.reload();
+              }
+            });
+
+            function sortPets(column, ascending) {
+              pets.sort((a, b) => {
+                let valA, valB;
+
+                switch (column) {
+                  case "name":
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                    return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+
+                  case "count":
+                    valA = a.count;
+                    valB = b.count;
+                    return ascending ? valA - valB : valB - valA;
+
+                  case "neon":
+                    valA = a.count >= 4 ? 1 : 0;
+                    valB = b.count >= 4 ? 1 : 0;
+                    return ascending ? valA - valB : valB - valA;
+
+                  case "mega":
+                    valA = a.count >= 16 ? 1 : 0;
+                    valB = b.count >= 16 ? 1 : 0;
+                    return ascending ? valA - valB : valB - valA;
+
+                  case "neonValue":
+                    valA = (valueTable[a.name.toLowerCase()]?.neonValue) || 0;
+                    valB = (valueTable[b.name.toLowerCase()]?.neonValue) || 0;
+                    return ascending ? valA - valB : valB - valA;
+
+                  case "megaValue":
+                    valA = (valueTable[a.name.toLowerCase()]?.megaValue) || 0;
+                    valB = (valueTable[b.name.toLowerCase()]?.megaValue) || 0;
+                    return ascending ? valA - valB : valB - valA;
+
+                  default:
+                    return 0;
+                }
+              });
+            }
+
+            currentSort = { column: null, ascending: true };
+
+            function updateSortArrows() {
+              document.querySelectorAll("th.sortable").forEach(th => {
+                const arrowSpan = th.querySelector(".arrow");
+                const column = th.getAttribute("data-column");
+                if (currentSort.column === column) {
+                  arrowSpan.textContent = currentSort.ascending ? "▲" : "▼";
+                } else {
+                  arrowSpan.textContent = "";
+                }
+              });
+            }
+
+            document.querySelectorAll("th.sortable").forEach(header => {
+              header.addEventListener("click", () => {
+                const column = header.getAttribute("data-column");
+                if (currentSort.column === column) {
+                  currentSort.ascending = !currentSort.ascending;
+                } else {
+                  currentSort.column = column;
+                  currentSort.ascending = true;
+                }
+                sortPets(currentSort.column, currentSort.ascending);
+                renderPets();
+              });
+            });
+
+            renderPets();
+          </script>
+          </body>
+          </html>

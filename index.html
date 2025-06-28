@@ -156,7 +156,7 @@
   }
 
   #pet-body tr.mega {
-    border-left: 4px solid #67a0ff;
+    border-left: 4px solid #832cec;
   }
 
   /* Filter input */
@@ -278,7 +278,9 @@
   </div>
 
   <div id="filter-container">
-    <input type="text" id="filter-input" placeholder="Search pets by name or filter by Ride/Fly/Neon/Mega" />
+    <input type="text" id="filter-input" placeholder="Search pets by name" />
+    <label style="margin-left:10px;"><input type="checkbox" id="filter-neon" /> Neon</label>
+    <label style="margin-left:6px;"><input type="checkbox" id="filter-mega" /> Mega</label>
   </div>
 
   <table id="pet-table" style="width: 100%; border-collapse: collapse;">
@@ -427,17 +429,16 @@
     tbody.innerHTML = "";
 
     const filterText = document.getElementById("filter-input").value.toLowerCase();
+    const filterNeon = document.getElementById("filter-neon").checked;
+    const filterMega = document.getElementById("filter-mega").checked;
 
     let petsToShow = pets.filter((pet) => {
       const neon = pet.count >= 4;
       const mega = pet.count >= 16;
-      let filterPass = pet.name.toLowerCase().includes(filterText) ||
-        (filterText === "ride" && pet.ride) ||
-        (filterText === "fly" && pet.fly) ||
-        (filterText === "ride+fly" && pet.ride && pet.fly) ||
-        (filterText === "neon" && neon) ||
-        (filterText === "mega" && mega);
-      return filterPass;
+      let nameMatch = pet.name.toLowerCase().includes(filterText);
+      let neonMatch = !filterNeon || neon;
+      let megaMatch = !filterMega || mega;
+      return nameMatch && neonMatch && megaMatch;
     });
 
     // Sort if needed
@@ -556,9 +557,9 @@
   });
 
   // Filter input event
-  document.getElementById("filter-input").addEventListener("input", () => {
-    renderPets();
-  });
+  document.getElementById("filter-input").addEventListener("input", renderPets);
+  document.getElementById("filter-neon").addEventListener("change", renderPets);
+  document.getElementById("filter-mega").addEventListener("change", renderPets);
 
   // --- Value Settings ---
 
@@ -634,23 +635,21 @@
   // Add new pet to value table
   document.getElementById("add-value-form").addEventListener("submit", e => {
     e.preventDefault();
-    const petName = document.getElementById("value-pet-name").value.trim().toLowerCase();
-    if (!petName) return alert("Please enter a pet name.");
-
-    if(valueTable[petName]) {
+    const petNameInput = document.getElementById("value-pet-name").value.trim();
+    if (!petNameInput) return alert("Please enter a pet name.");
+    const petKey = petNameInput.toLowerCase();
+    if(valueTable[petKey]) {
       alert("This pet already exists in value settings.");
       return;
     }
-
-    valueTable[petName] = {
-      petNameOriginal: petName,
+    valueTable[petKey] = {
+      petNameOriginal: petNameInput,
       neon: {normal:0, ride:0, fly:0, rideFly:0},
       mega: {normal:0, ride:0, fly:0, rideFly:0}
     };
-
     saveValueTable();
     renderValueTable();
-    alert(`Added ${petName} to Value Settings. Please edit its values.`);
+    alert(`Added ${petNameInput} to Value Settings. Please edit its values.`);
     document.getElementById("value-pet-name").value = "";
   });
 
